@@ -1,7 +1,7 @@
 # Spigot
 
-Dockerfile for [Spigot](https://www.spigotmc.org/) high performance  
-Minecraft server. Based on  
+Dockerfile for [Spigot](https://www.spigotmc.org/) high performance
+Minecraft server. Based on
 [Arch Linux AUR package](https://aur.archlinux.org/packages/spigot/).
 
 ## Usage
@@ -31,7 +31,7 @@ To use custom configurations and plugins:
     ...
     t13a/spigot
 
-Most users need to **create backup** periodically and after stopped  
+Most users need to **create backup** periodically and after stopped
 the server.
 
     docker \
@@ -42,7 +42,7 @@ the server.
     ...
     t13a/spigot
 
-Some users need to **store data in memory** like tmpfs, and restore  
+Some users need to **store data in memory** like tmpfs, and restore
 data before start.
 
     docker \
@@ -54,8 +54,8 @@ data before start.
     ...
     t13a/spigot
 
-Other parameters (eg: JVM arguments, number of backups, etc) are  
-defined in `/etc/conf.d/spigot`. To configure it easily, pass  
+Other parameters (eg: JVM arguments, number of backups, etc) are
+defined in `/etc/conf.d/spigot`. To configure it easily, pass
 environment variables with `SPIGOT_` prefix.
 
     docker \
@@ -65,7 +65,7 @@ environment variables with `SPIGOT_` prefix.
     ...
     t13a/spigot
 
-The notable feature "idling" introduced by Arch Linux AUR package can  
+The notable feature "idling" introduced by Arch Linux AUR package can
 **stop server during no player and restart when player connected**.
 
     docker \
