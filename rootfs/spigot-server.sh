@@ -32,8 +32,7 @@ function is_restored() {
 }
 
 function last_backup() {
-    [ -e "${BACKUP_DEST}" ] || return 0
-    ls -1 "${BACKUP_DEST}"/[0-9_.]*.tar.gz | sort | tail -n1
+    ls -1 "${BACKUP_DEST}"/[0-9_.]*.tar.gz 2> /dev/null | tail -n1
 }
 
 function exit_gracefully() {
@@ -49,9 +48,7 @@ if [ -n "${RESTORE_BEFORE_START}" ]
 then
     if ! is_restored
     then
-        LAST_BACKUP="$(last_backup)"
-
-        if [ -n "${LAST_BACKUP}" ]
+        if LAST_BACKUP="$(last_backup)"
         then
             spigot restore "${LAST_BACKUP}"
         else
