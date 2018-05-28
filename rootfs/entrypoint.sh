@@ -23,9 +23,14 @@ else
     exit 1
 fi
 
+if [ -n "${RESTORE_DIR:-}" ]
+then
+    echo "RESTORE_DIR=${RESTORE_DIR}" >> /etc/conf.d/spigot
+fi
+
 if [ -n "${BACKUP_SCHEDULE:-}" ]
 then
-    echo "${BACKUP_SCHEDULE} root /spigot-backup.sh > /proc/1/fd/1 2>&1" > /etc/cron.d/spigot-backup
+    echo "${BACKUP_SCHEDULE} root /spigot-backup-cron.sh > /proc/1/fd/1 2>&1" > /etc/cron.d/spigot-backup
 fi
 
 printenv | grep -o '^SPIGOT_[^=]*' | while read VAR_NAME

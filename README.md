@@ -47,10 +47,8 @@ data before start.
 
     docker \
     ...
-    -e RESTORE_BEFORE_START=yes \
-    -v /path/to/tmpfs/world:/srv/craftbukkit/world \
-    -v /path/to/tmpfs/world_nether:/srv/craftbukkit/world_nether \
-    -v /path/to/tmpfs/world_the_end:/srv/craftbukkit/world_the_end \
+    -e RESTORE_DIR=/srv/craftbukkit/restore \
+    -v /path/to/tmpfs:/srv/craftbukkit/restore \
     ...
     t13a/spigot
 

@@ -2,11 +2,6 @@
 
 set -euo pipefail
 
-function is_running() {
-    spigot status | grep '^Status:.*running.*'
-}
+source /etc/conf.d/spigot
 
-if is_running > /dev/null
-then
-    spigot backup
-fi
+SERVER_ROOT="${RESTORE_DIR:-${SERVER_ROOT}}" spigot backup
