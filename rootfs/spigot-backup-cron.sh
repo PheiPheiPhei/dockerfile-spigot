@@ -2,11 +2,7 @@
 
 set -euo pipefail
 
-function is_running() {
-    spigot status | grep '^Status:.*running.*'
-}
-
-if is_running > /dev/null
+if [ "$(/spigot-status.sh)" == 'running' ]
 then
     /spigot-backup.sh
 fi

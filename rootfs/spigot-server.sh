@@ -14,17 +14,20 @@ function exit_gracefully() {
     [ -n "${BACKUP_AFTER_STOP}" ] && /spigot-backup.sh
 }
 
-function is_running_or_idle() {
-    spigot status | grep 'running'
-}
-
 [ -n "${RESTORE_DIR}" ] && /spigot-restore.sh
 
 trap exit_gracefully EXIT
 
 spigot start
 
-while is_running_or_idle > /dev/null
+while true
 do
-    sleep "${LIVENESS_INTERVAL_TIME}"
+    case "$(/spigot-status.sh)" in
+        running|idling)
+            sleep "${LIVENESS_INTERVAL_TIME}"
+            ;;
+        *)
+            break
+            ;;
+    esac
 done
