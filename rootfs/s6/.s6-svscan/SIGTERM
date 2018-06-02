@@ -1,0 +1,3 @@
+#!/bin/bash
+echo-info "$(basename "${0}")"
+s6-svscanctl -t /s6

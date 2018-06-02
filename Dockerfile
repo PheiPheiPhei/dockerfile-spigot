@@ -20,4 +20,4 @@ ADD /rootfs /
 
 ENTRYPOINT [ "/entrypoint.sh" ]
 
-CMD [ "s6-svscan", "/s6" ]
+CMD [ "s6-svscan", "-s", "/s6" ]
