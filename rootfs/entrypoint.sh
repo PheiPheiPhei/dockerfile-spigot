@@ -17,7 +17,7 @@ fi
 
 if [ -n "${RESTORE_BEFORE_START}" ]
 then
-    spigot-restore
+    spigot-exec spigot-restore
 fi
 
 exec "${@}"

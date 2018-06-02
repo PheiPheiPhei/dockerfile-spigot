@@ -18,15 +18,22 @@ function exit_with_result() {
 echo-info "Starting backup..."
 trap exit_with_result EXIT
 
-BACKUP="${BACKUP_DIR}/$(date "+${BACKUP_FILE_FORMAT}")"
+BACKUP_FILE="${BACKUP_DIR}/$(date "+${BACKUP_FILE_FORMAT}")"
+
+if [ -e "${RESTORE_STATUS_FILE}" ]
+then
+    DIRECTORY="${RESTORE_DIR}"
+else
+    DIRECTORY="${SERVER_DIR}"
+fi
 
 tar \
 -cz \
--f "${BACKUP}" \
--C "${SERVER_DIR}" \
+-f "${BACKUP_FILE}" \
+-C "${DIRECTORY}" \
 "${BACKUP_FILES[@]}"
 
-echo-pass "${BACKUP}: Created"
+echo-pass "${BACKUP_FILE}: Created"
 
 # TODO rotate backup
 

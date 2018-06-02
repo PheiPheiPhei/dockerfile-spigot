@@ -29,7 +29,7 @@ if [ ${#@} -eq 0 ]
 then
     if ! BACKUP="$(last_backup)"
     then
-        RESULT=no=backup
+        RESULT=no-backup
         exit 0
     fi
 else
@@ -43,7 +43,10 @@ else
     echo-fail "${BACKUP}: Not found"
 fi
 
-rm -rf "${RESTORE_DIR}"/* "${RESTORE_DIR}"/.*
+(
+    cd "${RESTORE_DIR}"
+    rm -rf "${BACKUP_FILES[@]}"
+)
 
 tar \
 -xz \
@@ -57,5 +60,7 @@ do
     "${RESTORE_DIR}/${BACKUP_FILE}" \
     "${SERVER_DIR}/${BACKUP_FILE}"
 done
+
+touch "${RESTORE_STATUS_FILE}"
 
 RESULT=completed
