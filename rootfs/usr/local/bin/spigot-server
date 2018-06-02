@@ -6,23 +6,23 @@ source /usr/local/etc/spigot.conf
 
 function exit_with_result() {
     case "${RESULT:-}" in
-        not-started)
-            echo-pass "Server is not started"
-            ;;
         stopped)
-            echo-pass "Server is stopped"
+            echo-pass "Stopped server"
+            ;;
+        not-started)
+            echo-pass "Server not started"
             ;;
         started)
-            echo-fail "Server is still running"
+            echo-fail "Server still running"
             ;;
         *)
-            echo-fail "${0}: Unknown failure"
+            echo-fail "${0}: ${RESULT:-}: Result undefined"
             ;;
     esac
 }
 
 function start() {
-    echo-info 'Server is starting...'
+    echo-info 'Starting server...'
     rm -rf "${SERVER_INPUT}" "${SERVER_OUTPUT}"
     mkfifo "${SERVER_INPUT}" "${SERVER_OUTPUT}"
     cd "${SERVER_DIR}"
@@ -44,7 +44,7 @@ function stop() {
 
     if [ -n "${PID:-}" ]
     then
-        echo-info 'Server is stopping...'
+        echo-info 'Stopping server...'
         echo 'stop' > "${SERVER_INPUT}"
         wait_for_stop
     fi

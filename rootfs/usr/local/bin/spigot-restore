@@ -5,15 +5,15 @@ set -euo pipefail
 source /usr/local/etc/spigot.conf
 
 function exit_with_result() {
-    case "${RESULT}" in
+    case "${RESULT:-}" in
         completed)
-            echo-pass "Restore is completed"
+            echo-pass "Restore completed"
             ;;
         no-backup)
             echo-pass "No backup"
             ;;
         *)
-            echo-fail "Restore is aborted"
+            echo-fail "Failed to restore"
             ;;
     esac
 }
@@ -22,9 +22,7 @@ function last_backup() {
     ls "${BACKUP_DIR}"/${BACKUP_FILE_PATTERN} 2> /dev/null | tail -n1
 }
 
-RESULT=
-
-echo-info "Restore is starting..."
+echo-info "Starting restore..."
 trap exit_with_result EXIT
 
 if [ ${#@} -eq 0 ]
