@@ -1,0 +1,37 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/spigot.conf
+
+function start() {
+    "${@}" &
+    PID="${!}"
+}
+
+function wait_for_stop() {
+    wait "${PID}"
+    unset PID
+}
+
+function stop() {
+    trap - "${STOP_SIGS[@]}"
+
+    if [ -n "${PID:-}" ]
+    then
+        kill "${PID}"
+        wait "${PID}"
+        unset PID
+    fi
+}
+
+trap stop "${STOP_SIGS[@]}"
+
+if [ -n "${SUSPEND_TIMEOUT_SECS}" ]
+then
+    start spigot-idle
+    wait_for_stop
+fi
+
+start spigot-server
+wait_for_stop

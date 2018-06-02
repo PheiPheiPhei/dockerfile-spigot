@@ -1,19 +1,23 @@
-FROM t13a/yaourt AS builder
+FROM debian:stretch AS builder
 
-RUN sudo -u builder yaourt -S --noconfirm s6 spigot
+ARG SPIGOT_VERSION=latest
 
-FROM archlinux/base
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get update && \
+    apt-get -y install curl git openjdk-8-jre-headless && \
+    mkdir /spigot && \
+    cd /spigot && \
+    curl -Lo BuildTools.jar https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar && \
+    java -jar BuildTools.jar --rev "${SPIGOT_VERSION}"
 
-COPY --from=builder /pkg /pkg
+FROM anapsix/alpine-java
 
-RUN pacman -Syu --noconfirm cronie grep netcat procps-ng tar which && \
-    pacman -U --noconfirm /pkg/* && \
-    rm -rf /pkg
+RUN apk add --no-cache --update bash s6
 
-ADD rootfs /
+COPY --from=builder /spigot/spigot-*.jar /spigot/spigot.jar
 
-EXPOSE 25565
+ADD /rootfs /
 
 ENTRYPOINT [ "/entrypoint.sh" ]
 
-CMD [ "s6-svscan", "/etc/s6" ]
+CMD [ "s6-svscan", "/s6" ]

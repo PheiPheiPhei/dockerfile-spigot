@@ -1,0 +1,63 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/spigot.conf
+
+function exit_with_result() {
+    case "${RESULT}" in
+        completed)
+            echo-pass "Restore is completed"
+            ;;
+        no-backup)
+            echo-pass "No backup"
+            ;;
+        *)
+            echo-fail "Restore is aborted"
+            ;;
+    esac
+}
+
+function last_backup() {
+    ls "${BACKUP_DIR}"/${BACKUP_FILE_PATTERN} 2> /dev/null | tail -n1
+}
+
+RESULT=
+
+echo-info "Restore is starting..."
+trap exit_with_result EXIT
+
+if [ ${#@} -eq 0 ]
+then
+    if ! BACKUP="$(last_backup)"
+    then
+        RESULT=no=backup
+        exit 0
+    fi
+else
+    BACKUP="${1}"
+fi
+
+if [ -e "${BACKUP}" ]
+then
+    echo-pass "${BACKUP}: Found"
+else
+    echo-fail "${BACKUP}: Not found"
+fi
+
+rm -rf "${RESTORE_DIR}"/* "${RESTORE_DIR}"/.*
+
+tar \
+-xz \
+-f "${BACKUP}" \
+-C "${RESTORE_DIR}"
+
+for BACKUP_FILE in "${BACKUP_FILES[@]}"
+do
+    ln \
+    -sfnv \
+    "${RESTORE_DIR}/${BACKUP_FILE}" \
+    "${SERVER_DIR}/${BACKUP_FILE}"
+done
+
+RESULT=completed

@@ -1,0 +1,48 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/spigot.conf
+
+function exit_with_result() {
+    case "${RESULT:-}" in
+        connected)
+            echo-pass "Connected"
+            ;;
+        not-connected)
+            echo-fail "Not connected"
+            ;;
+        *)
+            echo-fail "${0}: Unknown failure"
+            ;;
+    esac
+}
+
+function wait_for_connect() {
+    echo-info "Waiting for connect..."
+
+    nc -l -p "${RESUME_PORT}" -e echo -n &
+
+    PID="${!}"
+
+    wait "${PID}"
+    unset PID
+
+    RESULT=connected
+}
+
+function stop() {
+    trap - "${STOP_SIGS[@]}"
+
+    if [ -n "${PID:-}" ]
+    then
+        kill -KILL "${PID}"
+        unset PID
+    fi
+}
+
+RESULT=not-connected
+
+trap exit_with_result EXIT
+trap stop "${STOP_SIGS[@]}"
+wait_for_connect

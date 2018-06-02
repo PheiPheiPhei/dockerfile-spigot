@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/spigot.conf
+
+function exit_with_result() {
+    case "${RESULT}" in
+        completed)
+            echo-pass "Backup is completed"
+            ;;
+        *)
+            echo-fail "Backup is aborted"
+            ;;
+    esac
+}
+
+RESULT=
+
+echo-info "Backup is starting..."
+trap exit_with_result EXIT
+
+BACKUP="${BACKUP_DIR}/$(date "+${BACKUP_FILE_FORMAT}")"
+
+tar \
+-cz \
+-f "${BACKUP}" \
+-C "${SERVER_DIR}" \
+"${BACKUP_FILES[@]}"
+
+echo-pass "${BACKUP}: Created"
+
+# TODO rotate backup
+
+RESULT=completed

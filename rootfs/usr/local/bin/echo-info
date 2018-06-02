@@ -1,0 +1,7 @@
+#!/bin/sh
+
+WHITE='\033[1;37m'
+NC='\033[0m'
+
+echo -ne "[${WHITE}INFO${NC}]${1:+ }"
+echo "${@}"

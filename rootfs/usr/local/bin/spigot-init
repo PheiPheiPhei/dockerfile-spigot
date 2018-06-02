@@ -14,10 +14,3 @@ if [ -n "${EULA:-}" ]
 then
     echo "eula=${EULA}" > "${SERVER_DIR}/eula.txt"
 fi
-
-if [ -n "${RESTORE_BEFORE_START}" ]
-then
-    spigot-restore
-fi
-
-exec "${@}"

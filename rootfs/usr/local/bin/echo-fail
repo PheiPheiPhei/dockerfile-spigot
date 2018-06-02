@@ -1,0 +1,8 @@
+#!/bin/sh
+
+LIGHT_RED='\033[1;31m'
+NC='\033[0m'
+
+echo -ne "[${LIGHT_RED}FAIL${NC}]${1:+ }"
+echo "${@}"
+exit 1

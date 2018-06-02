@@ -1,0 +1,65 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/spigot.conf
+
+function exit_with_result() {
+    case "${RESULT:-}" in
+        not-started)
+            echo-pass "Server is not started"
+            ;;
+        stopped)
+            echo-pass "Server is stopped"
+            ;;
+        started)
+            echo-fail "Server is still running"
+            ;;
+        *)
+            echo-fail "${0}: Unknown failure"
+            ;;
+    esac
+}
+
+function start() {
+    echo-info 'Server is starting...'
+    rm -rf "${SERVER_INPUT}" "${SERVER_OUTPUT}"
+    mkfifo "${SERVER_INPUT}" "${SERVER_OUTPUT}"
+    cd "${SERVER_DIR}"
+
+    java \
+    "${SERVER_JVM_ARGS[@]}" \
+    -jar "${SERVER_JAR}" \
+    "${SERVER_ARGS[@]}" < "${SERVER_INPUT}" > "${SERVER_OUTPUT}" &
+
+    PID="${!}"
+    RESULT=started
+
+    exec 3> "${SERVER_INPUT}" & # just for open
+    cat "${SERVER_OUTPUT}" &
+}
+
+function stop() {
+    trap stop_force "${STOP_SIGS[@]}"
+
+    if [ -n "${PID:-}" ]
+    then
+        echo-info 'Server is stopping...'
+        echo 'stop' > "${SERVER_INPUT}"
+        wait_for_stop
+    fi
+}
+
+function wait_for_stop() {
+    wait "${PID}"
+    unset PID
+
+    RESULT=stopped
+}
+
+RESULT=not-started
+
+trap exit_with_result EXIT
+trap stop "${STOP_SIGS[@]}"
+start
+wait_for_stop

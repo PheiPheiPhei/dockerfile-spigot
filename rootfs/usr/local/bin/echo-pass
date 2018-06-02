@@ -1,0 +1,7 @@
+#!/bin/sh
+
+LIGHT_GREEN='\033[1;32m'
+NC='\033[0m'
+
+echo -ne "[${LIGHT_GREEN}PASS${NC}]${1:+ }"
+echo "${@}"
