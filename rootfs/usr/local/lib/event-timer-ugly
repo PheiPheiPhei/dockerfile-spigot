@@ -17,13 +17,13 @@ function start_timer() {
 
     _TIMER_PID="${!}"
 
-    echo-debug "${0}: Notify event '${CYAN}${_TIMER_EVENT[@]}${NC}' after ${_TIMER_SECS} seconds..."
+    echo-info "Notify event '${CYAN}${_TIMER_EVENT[@]}${NC}' after ${_TIMER_SECS} seconds..."
 }
 
 function stop_timer() {
     [ -z "${_TIMER_PID:-}" ] && return 0
     stop_timer_without_debug
-    echo-debug "${0}: Stopped to notify event '${CYAN}${_TIMER_EVENT[@]}${NC}' after ${_TIMER_SECS} seconds"
+    echo-info "Stopped to notify event '${CYAN}${_TIMER_EVENT[@]}${NC}' after ${_TIMER_SECS} seconds"
 }
 
 function stop_timer_without_debug() {
