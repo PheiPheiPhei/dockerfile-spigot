@@ -36,10 +36,11 @@ function PROGRESS() {
 
     decision_init   AUTO_SAVE   SAVE    BACKUP
     decision_rule   on          pass    pass    transition READY
+    decision_rule   on          pass    fail    transition READY
     decision_rule   on          pass    yet     transition PROGRESS
     decision_rule   off         pass    pass    spigot-command 'save-on'
+    decision_rule   off         pass    fail    spigot-command 'save-on'
     decision_rule   off         pass    yet     backup
-    decision_rule   off         pass    fail    transition READY
     decision_rule   off         yet     -       spigot-command 'save-all'
     decision_rule   unknown     -       -       spigot-command 'save-off'
 }
