@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/spigot.conf
+source /usr/local/lib/async-runner
+
+function after_stop() {
+    if [ -n "${SERVER_STARTED:-}" ]
+    then
+        echo-pass "Server stopped"
+        event-notify "${EVENT_SERVER_STOPPED}"
+
+        if [ -n "${BACKUP_AFTER_STOP}" ]
+        then
+            spigot-backup
+        fi
+    fi
+}
+
+if [ -n "${STOP_TIMEOUT_SECS}" ]
+then
+    start spigot-listener
+    wait_for_stop
+fi
+
+rm -rf "${SERVER_OUTPUT}"
+mkfifo "${SERVER_OUTPUT}"
+start spigot-server
+
+SERVER_STARTED=yes
+
+echo-info "Server started"
+event-notify "${EVENT_SERVER_STARTED}"
+spigot-monitor & # stop automatically when server stopped
+wait_for_stop

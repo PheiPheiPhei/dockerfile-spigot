@@ -1,8 +1,7 @@
 # Spigot
 
 Dockerfile for [Spigot](https://www.spigotmc.org/) high performance
-Minecraft server. Based on
-[Arch Linux AUR package](https://aur.archlinux.org/packages/spigot/).
+Minecraft server.
 
 ## Usage
 
@@ -14,31 +13,53 @@ Get started with:
     -p 25565:25565 \
     t13a/spigot
 
-To use custom configurations and plugins:
+### Configure the server
+
+Run in specific UID/GID (default: `1000/1000`):
 
     docker \
     ...
-    -v $(pwd)/banned-ips.json:/srv/craftbukkit/banned-ips.json \
-    -v $(pwd)/banned-players.json:/srv/craftbukkit/banned-players.json \
-    -v $(pwd)/bukkit.yml:/srv/craftbukkit/bukkit.yml \
-    -v $(pwd)/commands.yml:/srv/craftbukkit/commands.yml \
-    -v $(pwd)/help.yml:/srv/craftbukkit/help.yml \
-    -v $(pwd)/ops.json:/srv/craftbukkit/ops.json \
-    -v $(pwd)/plugins:/srv/craftbukkit/plugins \
-    -v $(pwd)/server.properties:/srv/craftbukkit/server.properties \
-    -v $(pwd)/spigot.yml:/srv/craftbukkit/spigot.yml \
-    -v $(pwd)/whitelist.json:/srv/craftbukkit/whitelist.json \
+    -e PUID=1001 \
+    -e PGID=1002 \
     ...
     t13a/spigot
 
-Most users need to **create backup** periodically and after stopped
-the server.
+Set custom parameters:
+
+    docker \
+    ...
+    -e SERVER_JVM_ARGS='--Xms512M -Xmx1024M -XX:ParallelGCThreads=1' \
+    -e SERVER_ARGS='-nogui' \
+    ...
+    t13a/spigot
+
+Set custom files:
+
+    docker \
+    ...
+    -v $(pwd)/banned-ips.json:/spigot/banned-ips.json \
+    -v $(pwd)/banned-players.json:/spigot/banned-players.json \
+    -v $(pwd)/bukkit.yml:/spigot/bukkit.yml \
+    -v $(pwd)/commands.yml:/spigot/commands.yml \
+    -v $(pwd)/help.yml:/spigot/help.yml \
+    -v $(pwd)/ops.json:/spigot/ops.json \
+    -v $(pwd)/plugins:/spigot/plugins \
+    -v $(pwd)/server.properties:/spigot/server.properties \
+    -v $(pwd)/spigot.yml:/spigot/spigot.yml \
+    -v $(pwd)/whitelist.json:/spigot/whitelist.json \
+    ...
+    t13a/spigot
+
+### Backup and restore
+
+Most users need to **create backup** periodically, and after stop.
 
     docker \
     ...
     -e BACKUP_AFTER_STOP=yes \
-    -e BACKUP_SCHEDULE="*/15 * * * *" \
-    -v $(pwd)/backup:/srv/craftbukkit/backup \
+    -e BACKUP_INTERVAL_SECS=1200 \
+    -e BACKUP_KEEP_NUMS=10 \
+    -v $(pwd)/backup:/backup \
     ...
     t13a/spigot
 
@@ -47,30 +68,25 @@ data before start.
 
     docker \
     ...
-    -e RESTORE_DIR=/srv/craftbukkit/restore \
-    -v /path/to/tmpfs:/srv/craftbukkit/restore \
+    -e RESTORE_BEFORE_START=yes \
+    -v /path/to/tmpfs:/restore \
     ...
     t13a/spigot
 
-Other parameters (eg: JVM arguments, number of backups, etc) are
-defined in `/etc/conf.d/spigot`. To configure it easily, pass
-environment variables with `SPIGOT_` prefix.
+### Suspend and resume
+
+Stop server during no player and restart when player connected.
 
     docker \
     ...
-    -e SPIGOT_KEEP_BACKUPS="10" \
-    -e SPIGOT_SERVER_START_CMD="java -Xms512M -Xmx1024M -XX:ParallelGCThreads=1 -jar './spigot.jar' nogui" \
+    -e STOP_TIMEOUT_SECS=1200 \
     ...
     t13a/spigot
 
-The notable feature "idling" introduced by Arch Linux AUR package can
-**stop server during no player and restart when player connected**.
+### Enable debug output
 
     docker \
     ...
-    -e SPIGOT_IDLE_SERVER=true \
-    -e SPIGOT_CHECK_PLAYER_TIME=30 \
-    -e SPIGOT_IDLE_IF_TIME=1200 \
+    -e DEBUG=yes \
     ...
     t13a/spigot
-

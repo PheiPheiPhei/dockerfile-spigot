@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -euo pipefail
+
+source /usr/local/etc/color.conf
+
+[ -n "${DEBUG:-}" ] || exit 0
+
+echo -e "[$(date '+%H:%M:%S') ${MAGENTA}DEBUG${NC}]${1:+: }${@}"

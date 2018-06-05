@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/color.conf
+
+function start_timer() {
+    [ -n "${_TIMER_PID:-}" ] && return 0
+
+    _TIMER_EVENT="${1}"
+    _TIMER_SECS="${2}"
+
+    (
+        sleep "${_TIMER_SECS}"
+        event-notify "${_TIMER_EVENT}"
+    ) &
+
+    _TIMER_PID="${!}"
+
+    echo-info "Notify event '${CYAN}${_TIMER_EVENT[@]}${NC}' after ${_TIMER_SECS} seconds..."
+}
+
+function stop_timer() {
+    [ -z "${_TIMER_PID:-}" ] && return 0
+    stop_timer_without_debug
+    echo-info "Stopped to notify event '${CYAN}${_TIMER_EVENT[@]}${NC}' after ${_TIMER_SECS} seconds"
+}
+
+function stop_timer_without_debug() {
+    [ -z "${_TIMER_PID:-}" ] && return 0
+
+    kill -KILL "${_TIMER_PID}" 2> /dev/null || true
+    wait "${_TIMER_PID}" 2> /dev/null || true
+    unset _TIMER_PID
+}
+
+function restart_timer() {
+    stop_timer_without_debug "${@}"
+    start_timer "${@}"
+}

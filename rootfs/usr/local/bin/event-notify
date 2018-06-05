@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/color.conf
+source /usr/local/etc/event.conf
+
+EVENT="${1}"
+
+echo-info "Notify event '${CYAN}${EVENT}${NC}'"
+echo "${EVENT}" > "${EVENT_BUS}"

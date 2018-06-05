@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/spigot.conf
+source /usr/local/lib/async-runner
+source /usr/local/lib/event-fsm "${SERVICE_STOP_CONTROLLER}"
+source /usr/local/lib/event-timer-ugly
+
+function INIT() {
+    handle "${EVENT_SERVER_READY}" transition READY
+
+    stop_timer "${EVENT_STOP_TIMER}"
+}
+
+function READY() {
+    handle "${EVENT_PLAYER_NON_ZERO}" on_player_non_zero
+    handle "${EVENT_PLAYER_ZERO}" on_player_zero
+    handle "${EVENT_SERVER_STOPPED}" transition INIT
+    handle "${EVENT_STOP_TIMER}" spigot-command 'stop'
+}
+
+function on_player_non_zero() {
+    stop_timer "${EVENT_STOP_TIMER}"
+}
+
+function on_player_zero() {
+    if [ -n "${STOP_TIMEOUT_SECS}" ]
+    then
+        start_timer "${EVENT_STOP_TIMER}" "${STOP_TIMEOUT_SECS}"
+    fi
+}
+
+start state INIT
+wait_for_stop

@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/spigot.conf
+source /usr/local/lib/async-runner
+
+function server() {
+    exec java \
+    "${SERVER_JVM_ARGS[@]}" \
+    -jar "${SERVER_JAR}" \
+    "${SERVER_ARGS[@]}" < "${SERVER_INPUT}" > "${SERVER_OUTPUT}"
+}
+
+function before_stop() {
+    spigot-command 'stop'
+    wait_for_stop
+    exit 0
+}
+
+rm -rf "${SERVER_INPUT}"
+mkfifo "${SERVER_INPUT}"
+
+if [ -p "${SERVER_OUTPUT}" ]
+then
+    echo-info "Redirect output to '${SERVER_OUTPUT}'" >&2
+else
+    SERVER_OUTPUT=/dev/stdout
+fi
+
+cd "${SERVER_DIR}"
+start server 
+exec 3> "${SERVER_INPUT}" & # just for open
+wait_for_stop

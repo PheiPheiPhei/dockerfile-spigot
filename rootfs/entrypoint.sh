@@ -1,41 +1,44 @@
-#!/bin/sh
+#!/bin/bash
 
 set -euo pipefail
 
-source /etc/conf.d/spigot
+source /usr/local/etc/event.conf
+source /usr/local/etc/spigot.conf
 
-if [ -n "${TIMEZONE:-}" ]
-then
-    if [ -e "/usr/share/zoneinfo/${TIMEZONE}" ]
-    then
-        ln -sf "/usr/share/zoneinfo/${TIMEZONE}" /etc/localtime
-    else
-        echo "${TIMEZONE}: invalid timezone" >&2
-        exit 1
-    fi
-fi
+DIRECTORIES=(
+    "${SERVER_DIR}"
+    "${BACKUP_DIR}"
+    "${RESTORE_DIR}"
+    "${EVENT_ROOT}"
+)
 
-if [ "${EULA:-}" == "TRUE" ]
-then
-    echo "eula=${EULA}" > "${SERVER_ROOT}/eula.txt"
-else
-    echo "agreement to EULA not indicated" >&2
-    exit 1
-fi
+FIFOS=(
+    "${EVENT_BUS}"
+    "${EVENT_ROOT}/${SERVICE_BACKUP_CONTROLLER}"
+    "${EVENT_ROOT}/${SERVICE_LIST_CONTROLLER}"
+    "${EVENT_ROOT}/${SERVICE_STOP_CONTROLLER}"
+)
 
-if [ -n "${RESTORE_DIR:-}" ]
-then
-    echo "RESTORE_DIR=${RESTORE_DIR}" >> /etc/conf.d/spigot
-fi
-
-if [ -n "${BACKUP_SCHEDULE:-}" ]
-then
-    echo "${BACKUP_SCHEDULE} root /spigot-backup-cron.sh > /proc/1/fd/1 2>&1" > /etc/cron.d/spigot-backup
-fi
-
-printenv | grep -o '^SPIGOT_[^=]*' | while read VAR_NAME
+for DIRECTORY in "${DIRECTORIES[@]}"
 do
-    echo "${VAR_NAME#SPIGOT_}='${!VAR_NAME}'" >> /etc/conf.d/spigot
+    mkdir -p "${DIRECTORY}"
+    chown "${PUID}:${PGID}" "${DIRECTORY}"
 done
+
+for FIFO in "${FIFOS[@]}"
+do
+    mkfifo -m 600 "${FIFO}"
+    chown "${PUID}:${PGID}" "${FIFO}"
+done
+
+if [ -n "${EULA:-}" ]
+then
+    echo "eula=${EULA}" > "${SERVER_DIR}/eula.txt"
+fi
+
+if [ -n "${RESTORE_BEFORE_START}" ]
+then
+    spigot-exec spigot-restore
+fi
 
 exec "${@}"

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/event.conf
+
+function channel_fifos() {
+    find \
+    "${EVENT_ROOT}" \
+    -mindepth 1 \
+    -maxdepth 1 \
+    -name '[^.]*' \
+    -type p
+}
+
+CHANNEL_FIFOS=($(channel_fifos))
+
+for CHANNEL_FIFO in "${CHANNEL_FIFOS[@]}"
+do
+    echo-debug "${0}: ${CHANNEL_FIFO}: Channel FIFO found"
+done
+
+tail -F "${EVENT_BUS}" | # FIXME can't stop
+tee "${CHANNEL_FIFOS[@]}" > /dev/null

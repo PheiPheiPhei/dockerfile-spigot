@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -euo pipefail
+
+SVSCAN_DIR=/s6
+
+find \
+"${SVSCAN_DIR}" \
+-mindepth 1 \
+-maxdepth 1 \
+-name '[^.]*' \
+-type 'd' \
+-exec s6-svwait -D {} +
+
+echo-pass 'Stopped all services'
