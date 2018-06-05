@@ -1,0 +1,61 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/color.conf
+
+function decision_init() {
+    _CONDS=("${@}")
+    _RULES=()
+}
+
+function decision_rule() {
+    _RULE="${@}" # FIXME escape spaces
+    _RULES=("${_RULES[@]}" "${_RULE}")
+}
+
+function decision_make() {
+
+    function test_rule() {
+        local _RULE_AS_ARRAY=("${@}")
+
+        for _COND_INDEX in $(seq 0 $((${#_CONDS[@]} - 1)))
+        do
+            local _RULE_VALUE="${_RULE_AS_ARRAY[${_COND_INDEX}]}"
+            local _COND_VALUE="${!_CONDS[${_COND_INDEX}]}"
+
+            if [ "${_RULE_VALUE}" == - ]
+            then
+                continue
+            elif [ "${_RULE_VALUE}" != "${_COND_VALUE}" ]
+            then
+                return 1
+            fi
+        done
+
+        return 0
+    }
+
+    for _RULE in "${_RULES[@]}"
+    do
+        local _RULE_AS_ARRAY=(${_RULE}) # FIXME unescape spaces
+
+        if test_rule "${_RULE_AS_ARRAY[@]}"
+        then
+            local _RULE_CMD=(${_RULE_AS_ARRAY[@]:${#_CONDS[@]}})
+
+            if [ ${#_RULE_CMD[@]} -gt 0 ]
+            then
+                echo-debug "${0}: Decided: ${MAGENTA}${_RULE_CMD[@]}${NC}" >&2
+                "${_RULE_CMD[@]}"
+                return ${?}
+            else
+                echo-debug "${0}: Decided, but do nothing" >&2
+                return 0
+            fi
+        fi
+    done
+
+    echo-debug "${0}: Could not decided" >&2
+    return 1
+}

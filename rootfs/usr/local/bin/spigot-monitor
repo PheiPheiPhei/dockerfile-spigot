@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/spigot.conf
+
+function number_of_players() {
+    echo "${1}" | "${MONITOR_LIST_SED[@]}"
+}
+
+cat "${SERVER_OUTPUT}" | while read LINE
+do
+    echo "${LINE}" # redirect to stdout
+
+    if [[ ${LINE} =~ ${MONITOR_LIST_REGEX} ]]
+    then
+        if [ $(number_of_players "${LINE}") -eq 0 ]
+        then
+            event-notify "${EVENT_PLAYER_ZERO}"
+        else
+            event-notify "${EVENT_PLAYER_NON_ZERO}"
+        fi
+    elif [[ ${LINE} =~ ${MONITOR_SAVE_ALL_REGEX} ]]
+    then
+        event-notify "${EVENT_SAVE_ALL}"
+    elif [[ ${LINE} =~ ${MONITOR_SAVE_OFF_1_REGEX} ]] ||
+         [[ ${LINE} =~ ${MONITOR_SAVE_OFF_2_REGEX} ]]
+    then
+        event-notify "${EVENT_SAVE_OFF}"
+    elif [[ ${LINE} =~ ${MONITOR_SAVE_ON_1_REGEX} ]] ||
+         [[ ${LINE} =~ ${MONITOR_SAVE_ON_2_REGEX} ]]
+    then
+        event-notify "${EVENT_SAVE_ON}"
+    elif [[ ${LINE} =~ ${MONITOR_SERVER_READY_REGEX} ]]
+    then
+        event-notify "${EVENT_SERVER_READY}"
+    fi
+done

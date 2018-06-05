@@ -1,8 +1,7 @@
 #!/bin/sh
 
-LIGHT_RED='\033[1;31m'
-NC='\033[0m'
+set -euo pipefail
 
-echo -ne "[${LIGHT_RED}FAIL${NC}]${1:+ }"
-echo "${@}"
-exit 1
+source /usr/local/etc/color.conf
+
+echo -e "[$(date '+%H:%M:%S') ${RED}FAIL${NC}]${1:+: }${@}"

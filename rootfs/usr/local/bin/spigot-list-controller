@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/spigot.conf
+source /usr/local/lib/async-runner
+source /usr/local/lib/event-fsm "${SERVICE_LIST_CONTROLLER}"
+source /usr/local/lib/event-timer-ugly
+
+function INIT() {
+    handle "${EVENT_SERVER_READY}" transition READY
+
+    stop_timer "${EVENT_LIST_TIMER}"
+}
+
+function READY() {
+    handle "${EVENT_LIST_TIMER}" on_list_timer
+    handle "${EVENT_SERVER_STOPPED}" transition INIT
+
+    if [ -n "${STOP_TIMEOUT_SECS}" -a -n "${LIST_INTERVAL_SECS}" ]
+    then
+        restart_timer "${EVENT_LIST_TIMER}" "${LIST_INTERVAL_SECS}"
+    fi
+}
+
+function on_list_timer() {
+    spigot-command 'list'
+
+    if [ -n "${STOP_TIMEOUT_SECS}" -a -n "${LIST_INTERVAL_SECS}" ]
+    then
+        restart_timer "${EVENT_LIST_TIMER}" "${LIST_INTERVAL_SECS}"
+    fi
+}
+
+start state INIT
+wait_for_stop

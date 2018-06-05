@@ -3,63 +3,32 @@
 set -euo pipefail
 
 source /usr/local/etc/spigot.conf
+source /usr/local/lib/async-runner
 
-function exit_with_result() {
-    case "${RESULT:-}" in
-        stopped)
-            echo-pass "Stopped server"
-            ;;
-        not-started)
-            echo-pass "Server not started"
-            ;;
-        started)
-            echo-fail "Server still running"
-            ;;
-        *)
-            echo-fail "${0}: ${RESULT:-}: Result undefined"
-            ;;
-    esac
-}
-
-function start() {
-    echo-info 'Starting server...'
-    rm -rf "${SERVER_INPUT}" "${SERVER_OUTPUT}"
-    mkfifo "${SERVER_INPUT}" "${SERVER_OUTPUT}"
-    cd "${SERVER_DIR}"
-
-    java \
+function server() {
+    exec java \
     "${SERVER_JVM_ARGS[@]}" \
     -jar "${SERVER_JAR}" \
-    "${SERVER_ARGS[@]}" < "${SERVER_INPUT}" > "${SERVER_OUTPUT}" &
-
-    PID="${!}"
-    RESULT=started
-
-    exec 3> "${SERVER_INPUT}" & # just for open
-    cat "${SERVER_OUTPUT}" &
+    "${SERVER_ARGS[@]}" < "${SERVER_INPUT}" > "${SERVER_OUTPUT}"
 }
 
-function stop() {
-    trap stop_force "${STOP_SIGS[@]}"
-
-    if [ -n "${PID:-}" ]
-    then
-        echo-info 'Stopping server...'
-        echo 'stop' > "${SERVER_INPUT}"
-        wait_for_stop
-    fi
+function before_stop() {
+    spigot-command 'stop'
+    wait_for_stop
+    exit 0
 }
 
-function wait_for_stop() {
-    wait "${PID}"
-    unset PID
+rm -rf "${SERVER_INPUT}"
+mkfifo "${SERVER_INPUT}"
 
-    RESULT=stopped
-}
+if [ -p "${SERVER_OUTPUT}" ]
+then
+    echo-info "Redirect output to '${SERVER_OUTPUT}'" >&2
+else
+    SERVER_OUTPUT=/dev/stdout
+fi
 
-RESULT=not-started
-
-trap exit_with_result EXIT
-trap stop "${STOP_SIGS[@]}"
-start
+cd "${SERVER_DIR}"
+start server 
+exec 3> "${SERVER_INPUT}" & # just for open
 wait_for_stop

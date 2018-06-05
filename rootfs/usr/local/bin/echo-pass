@@ -1,7 +1,7 @@
 #!/bin/sh
 
-LIGHT_GREEN='\033[1;32m'
-NC='\033[0m'
+set -euo pipefail
 
-echo -ne "[${LIGHT_GREEN}PASS${NC}]${1:+ }"
-echo "${@}"
+source /usr/local/etc/color.conf
+
+echo -e "[$(date '+%H:%M:%S') ${GREEN}PASS${NC}]${1:+: }${@}"

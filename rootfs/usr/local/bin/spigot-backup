@@ -10,15 +10,24 @@ function exit_with_result() {
             echo-pass "Backup completed"
             ;;
         *)
-            echo-fail "Failed to backup"
+            echo-fail "Backup aborted"
+            exit 1
             ;;
     esac
 }
 
-echo-info "Starting backup..."
+function file_size() {
+    echo "$(stat -c '%s' "${1}") bytes"
+}
+
+function backups() {
+    ls -1 "${BACKUP_DIR}"/${BACKUP_PATTERN}
+}
+
+echo-info "Backup started"
 trap exit_with_result EXIT
 
-BACKUP_FILE="${BACKUP_DIR}/$(date "+${BACKUP_FILE_FORMAT}")"
+BACKUP="${BACKUP_DIR}/$(date "+${BACKUP_FORMAT}")"
 
 if [ -e "${RESTORE_STATUS_FILE}" ]
 then
@@ -29,12 +38,24 @@ fi
 
 tar \
 -cz \
--f "${BACKUP_FILE}" \
+-f "${BACKUP}" \
 -C "${DIRECTORY}" \
 "${BACKUP_FILES[@]}"
 
-echo-pass "${BACKUP_FILE}: Created"
+echo-info "${BACKUP}: Backup created ($(file_size "${BACKUP}"))"
 
-# TODO rotate backup
+if [ -n "${BACKUP_KEEP_NUMS}" ]
+then
+    OVER_NUMS=$(($(backups | wc -l) - ${BACKUP_KEEP_NUMS}))
+
+    if [ ${OVER_NUMS} -gt 0 ]
+    then
+        echo-info "${OVER_NUMS} backup(s) removing..."
+        backups | head -n "${OVER_NUMS}" | xargs rm -v
+        echo-info "${OVER_NUMS} backup(s) removed"
+    fi
+else
+    echo-info "$(backups | wc -l) backup(s) are never removed"
+fi
 
 RESULT=completed

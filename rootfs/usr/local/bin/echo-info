@@ -1,7 +1,7 @@
 #!/bin/sh
 
-WHITE='\033[1;37m'
-NC='\033[0m'
+set -euo pipefail
 
-echo -ne "[${WHITE}INFO${NC}]${1:+ }"
-echo "${@}"
+source /usr/local/etc/color.conf
+
+echo -e "[$(date '+%H:%M:%S') ${LIGHT_GRAY}INFO${NC}]${1:+: }${@}"

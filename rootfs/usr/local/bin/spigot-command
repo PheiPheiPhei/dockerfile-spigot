@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/color.conf
+source /usr/local/etc/spigot.conf
+
+echo-info "Send server command '${YELLOW}${@}${NC}'"
+echo "${@}" > "${SERVER_INPUT}"

@@ -13,16 +13,17 @@ function exit_with_result() {
             echo-pass "No backup"
             ;;
         *)
-            echo-fail "Failed to restore"
+            echo-fail "Restore aborted"
+            exit 1
             ;;
     esac
 }
 
 function last_backup() {
-    ls "${BACKUP_DIR}"/${BACKUP_FILE_PATTERN} 2> /dev/null | tail -n1
+    ls "${BACKUP_DIR}"/${BACKUP_PATTERN} 2> /dev/null | tail -n1
 }
 
-echo-info "Starting restore..."
+echo-info "Restore started"
 trap exit_with_result EXIT
 
 if [ ${#@} -eq 0 ]
@@ -38,9 +39,10 @@ fi
 
 if [ -e "${BACKUP}" ]
 then
-    echo-pass "${BACKUP}: Found"
+    echo-info "${BACKUP}: Backup found"
 else
-    echo-fail "${BACKUP}: Not found"
+    echo-fail "${BACKUP}: Backup not found"
+    exit 1
 fi
 
 (

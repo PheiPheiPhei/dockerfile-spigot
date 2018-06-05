@@ -1,0 +1,96 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/spigot.conf
+source /usr/local/lib/async-runner
+source /usr/local/lib/decisiontab
+source /usr/local/lib/event-fsm "${SERVICE_BACKUP_CONTROLLER}"
+source /usr/local/lib/event-timer-ugly
+
+function INIT() {
+    handle "${EVENT_SERVER_READY}" transition READY
+
+    stop_timer "${EVENT_BACKUP_TIMER}"
+}
+
+function READY() {
+    handle "${EVENT_BACKUP_TIMER}" on_backup_timer
+    handle "${EVENT_SERVER_STOPPED}" transition INIT
+
+    if [ -n "${BACKUP_INTERVAL_SECS}" ]
+    then
+        restart_timer "${EVENT_BACKUP_TIMER}" "${BACKUP_INTERVAL_SECS}"
+    fi
+}
+
+function PROGRESS() {
+    handle "${EVENT_SAVE_ALL}" on_save_all
+    handle "${EVENT_SAVE_OFF}" on_save_off
+    handle "${EVENT_SAVE_ON}" on_save_on
+    handle "${EVENT_SERVER_STOPPED}" transition INIT
+
+    set_variable AUTO_SAVE unknown
+    set_variable SAVE yet
+    set_variable BACKUP yet
+
+    decision_init   AUTO_SAVE   SAVE    BACKUP
+    decision_rule   on          pass    pass    transition READY
+    decision_rule   on          pass    yet     transition PROGRESS
+    decision_rule   off         pass    pass    spigot-command 'save-on'
+    decision_rule   off         pass    yet     backup
+    decision_rule   off         pass    fail    transition READY
+    decision_rule   off         yet     -       spigot-command 'save-all'
+    decision_rule   unknown     -       -       spigot-command 'save-off'
+}
+
+function on_backup_timer() {
+    if [ -n "${BACKUP_INTERVAL_SECS}" ]
+    then
+        restart_timer "${EVENT_BACKUP_TIMER}" "${BACKUP_INTERVAL_SECS}"
+    fi
+
+    transition PROGRESS
+
+    decision_make
+}
+
+function on_save_all() {
+    set_variable SAVE pass
+
+    decision_make
+}
+
+function on_save_off() {
+    set_variable AUTO_SAVE off
+
+    decision_make
+}
+
+function on_save_on() {
+    set_variable AUTO_SAVE on
+
+    decision_make
+}
+
+function backup() {
+    if spigot-backup
+    then
+        set_variable BACKUP pass
+    else
+        set_variable BACKUP fail
+    fi
+
+    decision_make
+}
+
+function set_variable() {
+    local VAR="${1}"
+    local VAL="${2}"
+
+    declare -g "${VAR}"="${VAL}"
+    echo-debug "${0}: set '${MAGENTA}${VAR}${NC}' to '${CYAN}${VAL}${NC}'"
+}
+
+start state INIT
+wait_for_stop

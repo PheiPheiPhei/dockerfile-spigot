@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -euo pipefail
+
+function start() {
+    if [ -z "${_PID:-}" ]
+    then
+        echo-debug "${0}: Starting..."
+        "${@}" &
+        _PID="${!}"
+        echo-debug "${0}: Started"
+    fi
+}
+
+function wait_for_stop() {
+    if [ -n "${_PID:-}" ]
+    then
+        wait "${_PID}" 2> /dev/null || true
+        unset _PID
+        echo-debug "${0}: Stopped"
+        after_stop
+    fi
+}
+
+function stop() {
+    trap - HUP INT QUIT TERM
+
+    if [ -n "${_PID:-}" ]
+    then
+        before_stop
+        echo-debug "${0}: Stopping..."
+        kill "${_PID}" 2> /dev/null || true
+        wait_for_stop
+        exit 0
+    fi
+}
+
+function before_stop() {
+    return 0
+}
+
+function after_stop() {
+    return 0
+}
+
+trap stop HUP INT QUIT TERM

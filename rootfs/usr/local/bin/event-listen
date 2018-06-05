@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/event.conf
+
+CHANNEL_FIFO="${EVENT_ROOT}/${1}"
+
+cat "${CHANNEL_FIFO}"

@@ -3,35 +3,34 @@
 set -euo pipefail
 
 source /usr/local/etc/spigot.conf
+source /usr/local/lib/async-runner
 
-function start() {
-    "${@}" &
-    PID="${!}"
-}
-
-function wait_for_stop() {
-    wait "${PID}"
-    unset PID
-}
-
-function stop() {
-    trap - "${STOP_SIGS[@]}"
-
-    if [ -n "${PID:-}" ]
+function after_stop() {
+    if [ -n "${SERVER_STARTED:-}" ]
     then
-        kill "${PID}"
-        wait "${PID}"
-        unset PID
+        echo-pass "Server stopped"
+        event-notify "${EVENT_SERVER_STOPPED}"
+
+        if [ -n "${BACKUP_AFTER_STOP}" ]
+        then
+            spigot-backup
+        fi
     fi
 }
 
-trap stop "${STOP_SIGS[@]}"
-
-if [ -n "${SUSPEND_TIMEOUT_SECS}" ]
+if [ -n "${STOP_TIMEOUT_SECS}" ]
 then
-    start spigot-idle
+    start spigot-listener
     wait_for_stop
 fi
 
+rm -rf "${SERVER_OUTPUT}"
+mkfifo "${SERVER_OUTPUT}"
 start spigot-server
+
+SERVER_STARTED=yes
+
+echo-info "Server started"
+event-notify "${EVENT_SERVER_STARTED}"
+spigot-monitor & # stop automatically when server stopped
 wait_for_stop

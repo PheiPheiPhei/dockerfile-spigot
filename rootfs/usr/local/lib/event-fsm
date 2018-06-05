@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -euo pipefail
+
+function state() {
+    declare -A _FSM_HANDLERS=()
+
+    transition "${1}"
+
+    while read _FSM_EVENT
+    do
+        if [[ -v _FSM_HANDLERS["${_FSM_EVENT}"] ]]
+        then
+            _FSM_HANDLER="${_FSM_HANDLERS["${_FSM_EVENT}"]}"
+
+            echo-debug "${0}: Handle event '${CYAN}${_FSM_EVENT}${NC}'"
+            ${_FSM_HANDLER}
+        fi
+    done < <(event-listen "${_FSM_CHANNEL}")
+}
+
+function transition() {
+    echo-debug "${0}: Transition state to '${MAGENTA}${1}${NC}'"
+
+    _FSM_HANDLERS=()
+
+    "${@}"
+}
+
+function handle() {
+    _FSM_HANDLERS["${1}"]="${@:2}"
+}
+
+_FSM_CHANNEL="${1}"
