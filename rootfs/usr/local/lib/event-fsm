@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+source /usr/local/etc/color.conf
+
 function state() {
     declare -A _FSM_HANDLERS=()
 

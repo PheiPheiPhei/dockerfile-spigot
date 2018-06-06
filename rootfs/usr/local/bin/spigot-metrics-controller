@@ -1,0 +1,141 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/spigot.conf
+source /usr/local/lib/async-runner
+source /usr/local/lib/event-fsm "${SERVICE_METRICS_CONTROLLER}"
+
+function INIT() {
+    [ -n "${METRICS_ENABLED}" ] || return 0
+
+    handle "${EVENT_PLAYER_NON_ZERO}" on_player_non_zero
+    handle "${EVENT_PLAYER_ZERO}" on_player_zero
+    handle "${EVENT_SAVE_ALL}" on_save_all
+    handle "${EVENT_SAVE_OFF}" on_save_off
+    handle "${EVENT_SAVE_ON}" on_save_on
+    handle "${EVENT_SERVER_READY}" on_server_ready
+    handle "${EVENT_SERVER_STARTED}" on_server_started
+    handle "${EVENT_SERVER_STOPPED}" on_server_stopped
+}
+
+function on_player_non_zero() {
+    set_metric "${METRIC_NAME_NO_PLAYER}" "0"
+}
+
+function on_player_zero() {
+    set_metric "${METRIC_NAME_NO_PLAYER}" "1"
+}
+
+function on_save_all() {
+    set_metric "${METRIC_NAME_SAVE_TIME_SECONDS}" "$(now)"
+}
+
+function on_save_off() {
+    set_metric "${METRIC_NAME_AUTO_SAVE}" "0"
+}
+
+function on_save_on() {
+    set_metric "${METRIC_NAME_AUTO_SAVE}" "1"
+}
+
+function on_server_ready() {
+    set_metric "${METRIC_NAME_READY_TIME_SECONDS}" "$(now)"
+}
+
+function on_server_started() {
+    set_metric "${METRIC_NAME_START_TIME_SECONDS}" "$(now)"
+}
+
+function on_server_stopped() {
+    reset_metric \
+    "${METRIC_NAME_AUTO_SAVE}" \
+    "${METRIC_NAME_NO_PLAYER}" \
+    "${METRIC_NAME_READY_TIME_SECONDS}" \
+    "${METRIC_NAME_START_TIME_SECONDS}"
+}
+
+function init_metrics() {
+    rm -f "${METRICS_FILE}"
+    touch "${METRICS_FILE}"
+}
+
+function sync_metrics() {
+    echo-debug "${0}: Synching metrics..."
+
+    for METRIC_NAME in "${!METRICS[@]}"
+    do
+        METRIC_HELP_VAR="METRIC_HELP_${METRIC_NAME}"
+        METRIC_TYPE_VAR="METRIC_TYPE_${METRIC_NAME}"
+        METRIC_VALUE="${METRICS["${METRIC_NAME}"]}"
+
+        [ -n "${METRIC_VALUE}" ] || continue
+
+        cat << EOF
+# HELP ${METRICS_NAME_PREFIX}${METRIC_NAME,,} ${!METRIC_HELP_VAR}
+# TYPE ${METRICS_NAME_PREFIX}${METRIC_NAME,,} ${!METRIC_TYPE_VAR}
+${METRICS_NAME_PREFIX}${METRIC_NAME,,}${METRICS_LABEL} ${METRIC_VALUE}
+EOF
+    done > "${METRICS_FILE}"
+
+    echo-debug "${0}: Synched metrics"
+}
+
+function set_metric() {
+    if [ "${METRICS["${1}"]}" != "${2}" ]
+    then
+        METRICS["${1}"]="${2}"
+
+        sync_metrics
+    fi
+}
+
+function reset_metric() {
+    HAS_CHANGES=
+
+    for METRIC_NAME in "${@}"
+    do
+        if [ -n "${METRICS["${METRIC_NAME}"]}" ]
+        then
+            METRICS["${METRIC_NAME}"]=""
+            HAS_CHANGES=yes
+        fi
+    done
+
+    [ -n "${HAS_CHANGES}" ] && sync_metrics
+}
+
+function now() {
+    date '+%s'
+}
+
+declare -r METRIC_NAME_AUTO_SAVE=AUTO_SAVE
+declare -r METRIC_NAME_NO_PLAYER=NO_PLAYER
+declare -r METRIC_NAME_READY_TIME_SECONDS=READY_TIME_SECONDS
+declare -r METRIC_NAME_SAVE_TIME_SECONDS=SAVE_TIME_SECONDS
+declare -r METRIC_NAME_START_TIME_SECONDS=START_TIME_SECONDS
+
+declare -r METRIC_HELP_AUTO_SAVE="Whether auto-saving is turned on."
+declare -r METRIC_HELP_NO_PLAYER="Whether any player logged in."
+declare -r METRIC_HELP_READY_TIME_SECONDS="Ready time of the server since unix epoch in seconds."
+declare -r METRIC_HELP_SAVE_TIME_SECONDS="Save time of the world since unix epoch in seconds."
+declare -r METRIC_HELP_START_TIME_SECONDS="Start time of the server since unix epoch in seconds."
+
+declare -r METRIC_TYPE_AUTO_SAVE=gauge
+declare -r METRIC_TYPE_NO_PLAYER=gauge
+declare -r METRIC_TYPE_READY_TIME_SECONDS=gauge
+declare -r METRIC_TYPE_SAVE_TIME_SECONDS=gauge
+declare -r METRIC_TYPE_START_TIME_SECONDS=gauge
+
+declare -A METRICS=(
+    ["${METRIC_NAME_AUTO_SAVE}"]=""
+    ["${METRIC_NAME_NO_PLAYER}"]=""
+    ["${METRIC_NAME_READY_TIME_SECONDS}"]=""
+    ["${METRIC_NAME_SAVE_TIME_SECONDS}"]=""
+    ["${METRIC_NAME_START_TIME_SECONDS}"]=""
+)
+
+init_metrics
+sync_metrics
+start state INIT
+wait_for_stop
