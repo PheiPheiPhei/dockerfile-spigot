@@ -20,8 +20,10 @@ function after_stop() {
 
 if [ -n "${STOP_TIMEOUT_SECS}" ]
 then
-    start spigot-listener
+    echo-info "Waiting for connect..."
+    start nc -l -p "${SERVER_PORT}" -e true
     wait_for_stop
+    echo-pass "Connected"
 fi
 
 rm -rf "${SERVER_OUTPUT}"
