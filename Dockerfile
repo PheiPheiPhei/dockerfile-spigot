@@ -12,7 +12,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 
 FROM anapsix/alpine-java
 
-RUN apk add --no-cache --update bash s6
+RUN apk add --no-cache --update bash darkhttpd s6
 
 COPY --from=builder /spigot/spigot-*.jar /spigot/spigot.jar
 

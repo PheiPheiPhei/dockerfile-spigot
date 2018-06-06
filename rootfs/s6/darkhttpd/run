@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -euo pipefail
+
+source /usr/local/etc/spigot.conf
+
+exec darkhttpd \
+"${METRICS_DIR}" \
+"${METRICS_DARKHTTPD_FLAGS[@]}"

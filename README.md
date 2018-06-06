@@ -83,6 +83,18 @@ Stop server during no player and restart when player connected.
     ...
     t13a/spigot
 
+### Enable prometheus metrics
+
+    docker \
+    ...
+    -e METRICS_ENABLED=yes \
+    -e METRICS_DARKHTTPD_FLAGS='--uid darkhttpd --gid www-data' \
+    -e METRICS_HOSTNAME='localhost' \
+    -e METRICS_NAME_PREFIX='spigot_' \
+    -e METRICS_LABEL='{hostname="localhost"}' \
+    ...
+    t13a/spigot
+
 ### Enable debug output
 
     docker \
