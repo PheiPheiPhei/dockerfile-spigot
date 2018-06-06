@@ -64,6 +64,8 @@ function on_server_stopped() {
     "${METRIC_NAME_NO_PLAYER}" \
     "${METRIC_NAME_READY_TIME_SECONDS}" \
     "${METRIC_NAME_START_TIME_SECONDS}"
+
+    set_metric "${METRIC_NAME_STOP_TIME_SECONDS}" "$(now)"
 }
 
 function init_metrics() {
@@ -127,6 +129,7 @@ declare -r METRIC_NAME_NO_PLAYER=NO_PLAYER
 declare -r METRIC_NAME_READY_TIME_SECONDS=READY_TIME_SECONDS
 declare -r METRIC_NAME_SAVE_TIME_SECONDS=SAVE_TIME_SECONDS
 declare -r METRIC_NAME_START_TIME_SECONDS=START_TIME_SECONDS
+declare -r METRIC_NAME_STOP_TIME_SECONDS=STOP_TIME_SECONDS
 
 declare -r METRIC_HELP_AUTO_SAVE="Whether auto-saving is turned on."
 declare -r METRIC_HELP_BACKUP_SUCCESS="Whether backup succeeded."
@@ -135,6 +138,7 @@ declare -r METRIC_HELP_NO_PLAYER="Whether any player logged in."
 declare -r METRIC_HELP_READY_TIME_SECONDS="Ready time of the server since unix epoch in seconds."
 declare -r METRIC_HELP_SAVE_TIME_SECONDS="Save time of the world since unix epoch in seconds."
 declare -r METRIC_HELP_START_TIME_SECONDS="Start time of the server since unix epoch in seconds."
+declare -r METRIC_HELP_STOP_TIME_SECONDS="Stop time of the server since unix epoch in seconds."
 
 declare -r METRIC_TYPE_AUTO_SAVE=gauge
 declare -r METRIC_TYPE_BACKUP_SUCCESS=gauge
@@ -143,6 +147,7 @@ declare -r METRIC_TYPE_NO_PLAYER=gauge
 declare -r METRIC_TYPE_READY_TIME_SECONDS=gauge
 declare -r METRIC_TYPE_SAVE_TIME_SECONDS=gauge
 declare -r METRIC_TYPE_START_TIME_SECONDS=gauge
+declare -r METRIC_TYPE_STOP_TIME_SECONDS=gauge
 
 declare -A METRICS=(
     ["${METRIC_NAME_AUTO_SAVE}"]=""
@@ -152,6 +157,7 @@ declare -A METRICS=(
     ["${METRIC_NAME_READY_TIME_SECONDS}"]=""
     ["${METRIC_NAME_SAVE_TIME_SECONDS}"]=""
     ["${METRIC_NAME_START_TIME_SECONDS}"]=""
+    ["${METRIC_NAME_STOP_TIME_SECONDS}"]=""
 )
 
 init_metrics
