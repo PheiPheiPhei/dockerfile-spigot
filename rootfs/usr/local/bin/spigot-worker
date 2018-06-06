@@ -13,7 +13,12 @@ function after_stop() {
 
         if [ -n "${BACKUP_AFTER_STOP}" ]
         then
-            spigot-backup
+            if spigot-backup
+            then
+                event-notify "${EVENT_BACKUP_SUCCESS}"
+            else
+                event-notify "${EVENT_BACKUP_FAILURE}"
+            fi
         fi
     fi
 }

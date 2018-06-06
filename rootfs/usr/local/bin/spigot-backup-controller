@@ -77,8 +77,10 @@ function on_save_on() {
 function backup() {
     if spigot-backup
     then
+        event-notify "${EVENT_BACKUP_SUCCESS}"
         set_variable BACKUP pass
     else
+        event-notify "${EVENT_BACKUP_FAILURE}"
         set_variable BACKUP fail
     fi
 

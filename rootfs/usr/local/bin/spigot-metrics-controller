@@ -9,6 +9,8 @@ source /usr/local/lib/event-fsm "${SERVICE_METRICS_CONTROLLER}"
 function INIT() {
     [ -n "${METRICS_ENABLED}" ] || return 0
 
+    handle "${EVENT_BACKUP_FAILURE}" on_backup_failure
+    handle "${EVENT_BACKUP_SUCCESS}" on_backup_success
     handle "${EVENT_PLAYER_NON_ZERO}" on_player_non_zero
     handle "${EVENT_PLAYER_ZERO}" on_player_zero
     handle "${EVENT_SAVE_ALL}" on_save_all
@@ -17,6 +19,15 @@ function INIT() {
     handle "${EVENT_SERVER_READY}" on_server_ready
     handle "${EVENT_SERVER_STARTED}" on_server_started
     handle "${EVENT_SERVER_STOPPED}" on_server_stopped
+}
+
+function on_backup_failure() {
+    set_metric "${METRIC_NAME_BACKUP_SUCCESS}" "0"
+}
+
+function on_backup_success() {
+    set_metric "${METRIC_NAME_BACKUP_SUCCESS}" "1"
+    set_metric "${METRIC_NAME_BACKUP_TIME_SECONDS}" "$(now)"
 }
 
 function on_player_non_zero() {
@@ -110,18 +121,24 @@ function now() {
 }
 
 declare -r METRIC_NAME_AUTO_SAVE=AUTO_SAVE
+declare -r METRIC_NAME_BACKUP_SUCCESS=BACKUP_SUCCESS
+declare -r METRIC_NAME_BACKUP_TIME_SECONDS=BACKUP_TIME_SECONDS
 declare -r METRIC_NAME_NO_PLAYER=NO_PLAYER
 declare -r METRIC_NAME_READY_TIME_SECONDS=READY_TIME_SECONDS
 declare -r METRIC_NAME_SAVE_TIME_SECONDS=SAVE_TIME_SECONDS
 declare -r METRIC_NAME_START_TIME_SECONDS=START_TIME_SECONDS
 
 declare -r METRIC_HELP_AUTO_SAVE="Whether auto-saving is turned on."
+declare -r METRIC_HELP_BACKUP_SUCCESS="Whether backup succeeded."
+declare -r METRIC_HELP_BACKUP_TIME_SECONDS="Backup time of the world since unix epoch in seconds."
 declare -r METRIC_HELP_NO_PLAYER="Whether any player logged in."
 declare -r METRIC_HELP_READY_TIME_SECONDS="Ready time of the server since unix epoch in seconds."
 declare -r METRIC_HELP_SAVE_TIME_SECONDS="Save time of the world since unix epoch in seconds."
 declare -r METRIC_HELP_START_TIME_SECONDS="Start time of the server since unix epoch in seconds."
 
 declare -r METRIC_TYPE_AUTO_SAVE=gauge
+declare -r METRIC_TYPE_BACKUP_SUCCESS=gauge
+declare -r METRIC_TYPE_BACKUP_TIME_SECONDS=gauge
 declare -r METRIC_TYPE_NO_PLAYER=gauge
 declare -r METRIC_TYPE_READY_TIME_SECONDS=gauge
 declare -r METRIC_TYPE_SAVE_TIME_SECONDS=gauge
@@ -129,6 +146,8 @@ declare -r METRIC_TYPE_START_TIME_SECONDS=gauge
 
 declare -A METRICS=(
     ["${METRIC_NAME_AUTO_SAVE}"]=""
+    ["${METRIC_NAME_BACKUP_SUCCESS}"]=""
+    ["${METRIC_NAME_BACKUP_TIME_SECONDS}"]=""
     ["${METRIC_NAME_NO_PLAYER}"]=""
     ["${METRIC_NAME_READY_TIME_SECONDS}"]=""
     ["${METRIC_NAME_SAVE_TIME_SECONDS}"]=""
