@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+printenv
+
 docker build -t ${IMAGE_NAME} \
---build-arg=SPIGOT_VERSION=${CACHE_TAG} \
+--build-arg=SPIGOT_VERSION=${DOCKER_TAG:-${CACHE_TAG}} \
 .

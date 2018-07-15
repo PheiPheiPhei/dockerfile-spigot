@@ -1,13 +1,15 @@
 FROM debian:stretch AS builder
 
-ARG SPIGOT_VERSION=latest
-
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && \
     apt-get -y install curl git openjdk-8-jre-headless && \
     mkdir /spigot && \
     cd /spigot && \
-    curl -Lo BuildTools.jar https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar && \
+    curl -Lo BuildTools.jar https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar
+
+ARG SPIGOT_VERSION=latest
+
+RUN cd /spigot && \
     java -jar BuildTools.jar --rev "${SPIGOT_VERSION}"
 
 FROM anapsix/alpine-java
