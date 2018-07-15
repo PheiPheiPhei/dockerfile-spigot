@@ -55,6 +55,12 @@ function on_server_ready() {
 }
 
 function on_server_started() {
+    reset_metric \
+    "${METRIC_NAME_AUTO_SAVE}" \
+    "${METRIC_NAME_NO_PLAYER}" \
+    "${METRIC_NAME_READY_TIME_SECONDS}" \
+    "${METRIC_NAME_STOP_TIME_SECONDS}"
+
     set_metric "${METRIC_NAME_START_TIME_SECONDS}" "$(now)"
 }
 
