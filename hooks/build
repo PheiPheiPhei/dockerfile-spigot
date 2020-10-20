@@ -3,5 +3,5 @@
 set -euo pipefail
 
 docker build -t ${IMAGE_NAME} \
---build-arg=SPIGOT_VERSION=${DOCKER_TAG:-${CACHE_TAG}} \
+--build-arg=SPIGOT_VERSION=latest \
 .
